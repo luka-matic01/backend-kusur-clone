@@ -137,4 +137,38 @@ router.post("/login", async (req, res) => {
   }
 });
 
+router.post("/checkUser", async (req, res) => {
+  const { phoneNumber } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        phoneNumber,
+      },
+      include: {
+        relusertenant: {
+          include: {
+            tenant: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User does not exist" });
+    }
+
+    // If user exists, return the first tenant
+    const firstTenant =
+      user.relusertenant.length > 0 ? user.relusertenant[0].tenant : null;
+
+    return res
+      .status(200)
+      .json({ message: "User found", tenant: firstTenant, user });
+  } catch (error) {
+    console.error("Error checking user:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 module.exports = router;
