@@ -27,11 +27,11 @@ router.post("/login", async (req, res) => {
                     discountType: true,
                   },
                 },
+                wallet: true, // Include tenant's wallet
               },
             },
           },
         },
-        wallet: true, // Include user's wallet
       },
     });
 
@@ -66,12 +66,6 @@ router.post("/login", async (req, res) => {
           firstName: faker.person.firstName(),
           lastName: faker.person.lastName(),
           phoneNumber: phoneNumber,
-          wallet: {
-            // Create wallet for the user
-            create: {
-              pointBalance: faker.number.int({ min: 0, max: 1000 }), // Example point balance
-            },
-          },
           relusertenant: {
             create: Array.from({ length: 6 }, () => ({
               tenant: {
@@ -102,6 +96,11 @@ router.post("/login", async (req, res) => {
                       })),
                     },
                   },
+                  wallet: {
+                    create: {
+                      pointBalance: faker.number.int({ min: 0, max: 120 }), // Example point balance
+                    },
+                  },
                 },
               },
             })),
@@ -110,26 +109,19 @@ router.post("/login", async (req, res) => {
         include: {
           relusertenant: {
             include: {
-              tenant: true,
+              tenant: {
+                include: {
+                  vouchers: true,
+                  coupons: true,
+                  wallet: true, // Include tenant's wallet
+                },
+              },
             },
-          },
-          wallet: true, // Include user's wallet
-        },
-      });
-
-      // Create wallet for the user and connect tenants dynamically
-      const walletId = user.wallet.id;
-      const tenantIds = user.relusertenant.map(({ tenant }) => tenant.id);
-
-      await prisma.wallet.update({
-        where: { id: walletId },
-        data: {
-          tenants: {
-            connect: tenantIds.map((id) => ({ id })),
           },
         },
       });
     }
+
     return res.status(200).json({ message: "Login successful", user });
   } catch (error) {
     console.error("Error logging in:", error);
@@ -148,7 +140,11 @@ router.post("/checkUser", async (req, res) => {
       include: {
         relusertenant: {
           include: {
-            tenant: true,
+            tenant: {
+              include: {
+                wallet: true, // Include tenant's wallet
+              },
+            },
           },
         },
       },

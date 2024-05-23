@@ -17,15 +17,8 @@ router.get("/checkTenant/:slug", async (req, res) => {
       include: {
         vouchers: true,
         coupons: true,
-        relusertenant: {
-          include: {
-            user: {
-              include: {
-                wallet: true,
-              },
-            },
-          },
-        },
+        relusertenant: true,
+        wallet: true,
       },
     });
 
@@ -58,6 +51,7 @@ router.get("/:slug", async (req, res) => {
       include: {
         vouchers: true,
         coupons: true,
+        wallet: true,
       },
     });
 
