@@ -20,11 +20,11 @@ router.get("/:slug", async (req, res) => {
               include: {
                 vouchers: true,
                 coupons: true,
+                wallet: true,
               },
             },
           },
         },
-        wallet: true,
       },
     });
 
